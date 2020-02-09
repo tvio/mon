@@ -1,0 +1,137 @@
+import axios from "axios";
+import fs from "fs";
+import https from "https";
+import stringify from "json-stringify-safe";
+import uuidv4 from "uuid";
+
+const instance = axios.create({
+  baseURL: "https://testapi.sukl.cz/zp/v1",
+  httpsAgent: new https.Agent({
+    ca: fs.readFileSync("./cert.pem"),
+    cert: fs.readFileSync("../cert.pem"),
+    key: fs.readFileSync("../server.key"),
+    encoding: "utf-8",
+    // auth: 'user:password',
+    rejectUnauthorized: false
+  })
+});
+
+const config = {
+  headers: {
+    "Content-Type": "application/json"
+  }
+};
+//parametry pro data
+const podaniID = uuidv4();
+//const kodPracoviste =   "00150007957";
+const kodPracoviste = "00150007946";
+const kodZP = "0000149";
+const uhradovaSkupina = "01.01.02.01";
+// const uhradovaSkupina = "00.00.00.00";
+//prilohy uuid pro dali pouziti
+const p = {
+  priloha6: uuidv4(),
+  priloha7: uuidv4(),
+  priloha8: uuidv4(),
+  priloha9: uuidv4(),
+  priloha10: uuidv4(),
+  priloha11: uuidv4(),
+  priloha12: uuidv4(),
+  priloha13: uuidv4()
+};
+console.log(p);
+
+//data pro preohlaseni, bez veci ohledne RZPRO, uhradova skipina!=11
+const dataPostPreohlaseni = {
+  podaniID,
+  typID: 2,
+  kodPracoviste,
+  sw: {
+    nazev: "No.js Test",
+    verze: "1.5",
+    vyrobce: "František Koudelka 3.Kyu"
+  },
+  zp: {
+    kodZP,
+    nazev: "TEST10",
+    doplnek: "Doplnek",
+    uhradovaSkupina,
+    uhradovyLimit: 100,
+    nejvyssiCena: 51.6,
+    uhrada: 51.6,
+    mernaJednotka: 1,
+    pocetMJ: 51.6
+  },
+  telefon: "00420602123456",
+  email: "test@sukl.cz",
+  poznamka: "Testovací request",
+  prilohy: [
+    {
+      typPrilohyID: 8,
+      priloha: p.priloha8,
+      // prilohaNazev: "priloha.pdf",
+      dolozenoRZPRO: false
+    },
+    {
+      typPrilohyID: 9,
+      priloha: p.priloha9,
+      // prilohaNazev: "priloha.pdf",
+      dolozenoRZPRO: false
+    },
+    {
+      typPrilohyID: 10,
+      priloha: p.priloha10,
+      // prilohaNazev: "priloha.pdf",
+      dolozenoRZPRO: false
+    },
+    {
+      typPrilohyID: 11,
+      priloha: p.priloha11,
+      // prilohaNazev: "priloha.pdf",
+      dolozenoRZPRO: false
+    },
+    {
+      typPrilohyID: 12,
+      priloha: p.priloha12,
+      // prilohaNazev: "priloha.pdf",
+      dolozenoRZPRO: false
+    }
+  ]
+};
+
+// instance.get('/ciselniky//')
+// .then((res)=>console.log(res.data));
+
+const json = stringify(dataPostPreohlaseni);
+console.log(json);
+instance
+  .post("/hlaseni", json, config)
+  .then(function consolelog(res) {
+    console.log("http code " + res.status);
+    console.log(res.data);
+    //console.log(res.config);
+    //console.log (res.headers)
+  })
+
+  .catch(function(error) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      //console.log(error.request);
+      console.log(error.response.data);
+      console.log("http status " + error.response.status);
+      //  console.log(error.request);                 //console.log(error.response.headers);
+      //console.log('detail',stringify(error.response.data));
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      //console.log(error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      //console.log('Error', error.message);
+    }
+
+    //console.log(error.config);
+  });
+
